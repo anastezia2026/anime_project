@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Топ аниме{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"> Топ аниме по рейтингу</h1>
+<p class="text-muted">Лучшие аниме с оценкой 8.0 и выше</p>
+
+<div class="row">
+    {% for anime in animes %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <img src="{{ anime.image_url }}" class="card-img-top" alt="{{ anime.title }}" style="height: 400px; object-fit: cover;">
+            <div class="card-body">
+                <h5 class="card-title">{{ anime.title }}</h5>
+                <p class="card-text">
+                    <strong>⭐ Рейтинг:</strong> {{ anime.score }}
+                </p>
+                <p class="card-text">
+                    <strong>📝 Описание:</strong> {{ anime.synopsis[:200] if anime.synopsis else 'Описание отсутствует' }}...
+                </p>
+                <a href="{{ anime.url }}" target="_blank" class="btn btn-outline-primary btn-sm">Подробнее на MyAnimeList</a>
+
+                {% if session.get('user_id') %}
+                <form method="POST" action="/add_to_list" class="d-inline ms-2">
+                    <input type="hidden" name="anime_title" value="{{ anime.title }}">
+                    <select name="status" class="form-select form-select-sm d-inline" style="width: auto;">
+                        <option value="want_to_watch">Хочу посмотреть</option>
+                        <option value="watching">Смотрю</option>
+                        <option value="watched">Просмотрено</option>
+                    </select>
+                    <button type="submit" class="btn btn-success btn-sm">Добавить</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

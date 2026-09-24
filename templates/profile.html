@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">👤 Мой профиль</h1>
+<p class="lead">Привет, {{ username }}!</p>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">📺 Хочу посмотреть ({{ want_to_watch|length }})</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for anime in want_to_watch %}
+                <li class="list-group-item">
+                    {{ anime }}
+                    <form method="POST" action="/remove_from_list" class="d-inline float-end">
+                        <input type="hidden" name="anime_title" value="{{ anime }}">
+                        <button type="submit" class="btn btn-danger btn-sm">✕</button>
+                    </form>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">Список пуст</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">🎬 Смотрю сейчас ({{ watching|length }})</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for anime in watching %}
+                <li class="list-group-item">
+                    {{ anime }}
+                    <form method="POST" action="/remove_from_list" class="d-inline float-end">
+                        <input type="hidden" name="anime_title" value="{{ anime }}">
+                        <button type="submit" class="btn btn-danger btn-sm">✕</button>
+                    </form>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">Список пуст</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">✅ Просмотрено ({{ watched|length }})</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for anime in watched %}
+                <li class="list-group-item">
+                    {{ anime }}
+                    <form method="POST" action="/remove_from_list" class="d-inline float-end">
+                        <input type="hidden" name="anime_title" value="{{ anime }}">
+                        <button type="submit" class="btn btn-danger btn-sm">✕</button>
+                    </form>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted">Список пуст</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

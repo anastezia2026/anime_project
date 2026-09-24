@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Аниме-портал{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-4 mb-4">🌸 Добро пожаловать в мир аниме! 🌸</h1>
+    <p class="lead mb-4">
+        Наш портал поможет тебе найти идеальное аниме, основываясь на твоих интересах.
+        Здесь ты найдешь топы, цитаты и сможешь вести свои списки!
+    </p>
+
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="card-title">🏆 Топ аниме</h2>
+                    <p class="card-text">Смотри лучшие аниме с высокими рейтингами</p>
+                    <a href="/top" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="card-title">💬 Цитаты</h2>
+                    <p class="card-text">Найди вдохновляющие цитаты из любимых аниме</p>
+                    <a href="/quotes" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <h2 class="card-title">📋 Мой профиль</h2>
+                    <p class="card-text">Веди свои списки: хочу посмотреть, смотрю, просмотрено</p>
+                    <a href="/profile" class="btn btn-primary">Перейти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

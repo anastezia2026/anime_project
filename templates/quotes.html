@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Цитаты из аниме{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">💬 Цитаты из аниме</h1>
+
+<form method="GET" action="/quotes" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="anime" class="form-control" placeholder="Введите название аниме..." value="{{ search_query }}">
+        <button class="btn btn-primary" type="submit">Искать</button>
+    </div>
+</form>
+
+{% if quotes %}
+    <div class="row">
+        {% for quote in quotes %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">🎬 {{ quote.anime }}</h6>
+                    <p class="card-text">
+                        <strong>{{ quote.character }}:</strong> «{{ quote.quote }}»
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% elif search_query %}
+    <div class="alert alert-warning">
+        По запросу "{{ search_query }}" ничего не найдено 😔
+    </div>
+{% endif %}
+{% endblock %}
