@@ -33,20 +33,94 @@ def get_top_anime_pandas():
 
 
 def search_anime_in_api(query):
-    """Ищет аниме в API по названию"""
-    url = f"https://api.jikan.moe/v4/anime?q={query}&limit=20"
+    """Ищет аниме в стабильном API Kitsu по названию"""
+    query = query.strip()
+    url = f"https://kitsu.io/api/edge/anime?filter[text]={query}&page[limit]=15"
     response = requests.get(url)
-    data_dict = response.json()
-    anime_list = data_dict['data']
 
-    if not anime_list:
+    print(f"🔍 Поиск: '{query}' | Статус ответа: {response.status_code}")
+
+    if response.status_code != 200:
+        print("⚠️ Ошибка соединения с API")
         return []
 
-    df = pd.DataFrame(anime_list)
-    df['image_url'] = df['images'].apply(lambda x: x['jpg']['large_image_url'])
-    df = df[['title', 'score', 'synopsis', 'url', 'image_url']]
+    data_dict = response.json()
+    if 'data' not in data_dict or not data_dict['data']:
+        print("⚠️ Ничего не найдено")
+        return []
 
+    # Превращаем сложные данные Kitsu в плоский список для Pandas
+    flat_data = []
+    for item in data_dict['data']:
+        attr = item.get('attributes', {})
+        flat_data.append({
+            'title': attr.get('canonicalTitle') or attr.get('titles', {}).get('en', 'Без названия'),
+            'score': attr.get('averageRating'),
+            'synopsis': attr.get('synopsis', 'Описание отсутствует'),
+            'url': f"https://kitsu.io/anime/{item.get('id')}",
+            'image_url': attr.get('posterImage', {}).get('original', '')
+        })
+
+    df = pd.DataFrame(flat_data)
+
+    # Kitsu дает рейтинг от 0 до 100. Делим на 10, чтобы получить привычные 8.5, 9.0 и т.д.
+    df['score'] = pd.to_numeric(df['score'], errors='coerce').fillna(0) / 10
+
+    # Оставляем только аниме с рейтингом 7.0 и выше
+    df = df[df['score'] >= 7.0]
+
+    print(f"✅ Найдено и отфильтровано: {len(df)} аниме")
     return df.to_dict(orient='records')
+
+
+def get_anime_by_genres(genres):
+    """Подбирает аниме по жанрам через поиск Kitsu"""
+    # Словарь для перевода ID наших жанров в английские ключевые слова
+    genre_keywords = {
+        '1': 'action', '2': 'adventure', '4': 'comedy', '8': 'drama',
+        '10': 'fantasy', '14': 'horror', '7': 'mystery', '22': 'romance',
+        '24': 'sci-fi', '36': 'slice of life', '30': 'sports', '37': 'supernatural'
+    }
+
+    # Собираем ключевые слова для выбранных жанров
+    keywords = [genre_keywords.get(g, '') for g in genres if g in genre_keywords]
+    if not keywords:
+        return []
+
+    query = " ".join(keywords)
+    # sort=-averageRating сортирует по рейтингу (от большего к меньшему)
+    url = f"https://kitsu.io/api/edge/anime?filter[text]={query}&page[limit]=15&sort=-averageRating"
+    response = requests.get(url)
+
+    print(f"🎯 Подбор по жанрам (слова: '{query}') | Статус: {response.status_code}")
+
+    if response.status_code != 200 or 'data' not in response.json():
+        return []
+
+    data_dict = response.json()['data']
+    flat_data = []
+
+    for item in data_dict:
+        attr = item.get('attributes', {})
+        try:
+            score = float(attr.get('averageRating', 0)) / 10
+        except (ValueError, TypeError):
+            score = 0
+
+        flat_data.append({
+            'title': attr.get('canonicalTitle') or attr.get('titles', {}).get('en', 'Без названия'),
+            'score': score,
+            'synopsis': attr.get('synopsis', 'Описание отсутствует'),
+            'url': f"https://kitsu.io/anime/{item.get('id')}",
+            'image_url': attr.get('posterImage', {}).get('original', '')
+        })
+
+    df = pd.DataFrame(flat_data)
+    df = df[df['score'] >= 7.0]
+
+    print(f"✅ Найдено и отфильтровано: {len(df)} аниме")
+    return df.to_dict(orient='records')
+
 def search_quotes_in_json(anime_name):
     """Ищет цитаты в локальном JSON файле через Pandas"""
     with open('quotes.json', 'r', encoding='utf-8') as file:
@@ -266,6 +340,36 @@ def remove_from_list():
     remove_anime_from_list_db(session['user_id'], anime_title)
     return redirect(url_for('profile'))
 
+
+@app.route('/recommend')
+def recommend_anime():
+    """Страница подбора аниме по жанрам"""
+    genres = request.args.getlist('genres')
+    results = []
+
+    if genres:
+        results = get_anime_by_genres(genres)
+
+    # Список популярных жанров для выбора
+    all_genres = [
+        {'id': '1', 'name': 'Экшен'},
+        {'id': '2', 'name': 'Приключения'},
+        {'id': '4', 'name': 'Комедия'},
+        {'id': '8', 'name': 'Драма'},
+        {'id': '10', 'name': 'Фэнтези'},
+        {'id': '14', 'name': 'Ужасы'},
+        {'id': '7', 'name': 'Мистика'},
+        {'id': '22', 'name': 'Романтика'},
+        {'id': '24', 'name': 'Фантастика'},
+        {'id': '36', 'name': 'Повседневность'},
+        {'id': '30', 'name': 'Спорт'},
+        {'id': '37', 'name': 'Сверхъестественное'}
+    ]
+
+    return render_template('recommend.html',
+                           results=results,
+                           selected_genres=genres,
+                           all_genres=all_genres)
 
 # ==========================================
 # ЗАПУСК СЕРВЕРА
